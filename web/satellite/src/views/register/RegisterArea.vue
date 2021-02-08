@@ -52,8 +52,12 @@ export default class RegisterArea extends Vue {
     private emailError: string = '';
     private passwordError: string = '';
     private repeatedPasswordError: string = '';
+    private companyNameError: string = '';
+    private employeeCountError: string = '';
+    private positionError: string = '';
     private isTermsAcceptedError: boolean = false;
     private isLoading: boolean = false;
+    private isProfessional: boolean = false;
 
     private readonly auth: AuthHttpApi = new AuthHttpApi();
 
@@ -61,6 +65,10 @@ export default class RegisterArea extends Vue {
 
     // tardigrade logic
     public isDropdownShown: boolean = false;
+
+    // Employee Count dropdown options
+    public employeeCountOptions = ['1-50', '51-1000', '1001+'];
+    public optionsShown = false;
 
     /**
      * Lifecycle hook before vue instance is created.
@@ -155,7 +163,6 @@ export default class RegisterArea extends Vue {
 
             return;
         }
-
         await this.createUser();
 
         this.isLoading = false;
@@ -209,6 +216,37 @@ export default class RegisterArea extends Vue {
     }
 
     /**
+     * Sets user's company name field from value string.
+     */
+    public setCompanyName(value: string): void {
+        this.user.companyName = value.trim();
+        this.companyNameError = '';
+    }
+
+    /**
+     * Sets user's company size field from value string.
+     */
+    public setEmployeeCount(value: string): void {
+        this.user.employeeCount = value;
+        this.employeeCountError = '';
+    }
+
+    /**
+     * Sets user's position field from value string.
+     */
+    public setPosition(value: string): void {
+        this.user.position = value.trim();
+        this.positionError = '';
+    }
+
+    /**
+     * toggle user account type
+     */
+    public toggleAccountType(value: boolean): void {
+        this.isProfessional = value;
+    }
+
+    /**
      * Validates input values to satisfy expected rules.
      */
     private validateFields(): boolean {
@@ -229,6 +267,25 @@ export default class RegisterArea extends Vue {
             isNoErrors = false;
         }
 
+        if (this.isProfessional) {
+
+            if (!this.user.companyName.trim()) {
+                this.companyNameError = 'No Company Name filled in';
+                isNoErrors = false;
+            }
+
+            if (!this.user.position.trim()) {
+                this.positionError = 'No Position filled in';
+                isNoErrors = false;
+            }
+
+            if (!this.user.employeeCount.trim()) {
+                this.employeeCountError = 'No Company Size filled in';
+                isNoErrors = false;
+            }
+
+        }
+
         if (this.repeatedPassword !== this.password) {
             this.repeatedPasswordError = 'Password doesn\'t match';
             isNoErrors = false;
@@ -246,14 +303,23 @@ export default class RegisterArea extends Vue {
      * Creates user and toggles successful registration area visibility.
      */
     private async createUser(): Promise<void> {
+        this.user.isProfessional = this.isProfessional;
         try {
             this.userId = await this.auth.register(this.user, this.secret);
-
             LocalData.setUserId(this.userId);
 
-            this.$segment.identify(this.userId, {
-                email: this.$store.getters.user.email,
-            });
+            // if (this.user.isProfessional) {
+            //     this.$segment.identify(this.userId, {
+            //         email: this.$store.getters.user.email,
+            //         position: this.$store.getters.user.position,
+            //         company_name: this.$store.getters.user.companyName,
+            //         employee_count: this.$store.getters.user.employeeCount,
+            //     });
+            // } else {
+            //     this.$segment.identify(this.userId, {
+            //         email: this.$store.getters.user.email,
+            //     });
+            // }
 
             const verificationPageURL: string = MetaUtils.getMetaContent('verification-page-url');
             if (verificationPageURL) {
@@ -266,7 +332,6 @@ export default class RegisterArea extends Vue {
 
                 return;
             }
-
             await this.$store.dispatch(APP_STATE_ACTIONS.TOGGLE_SUCCESSFUL_REGISTRATION);
         } catch (error) {
             await this.$notify.error(error.message);

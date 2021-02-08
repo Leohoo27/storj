@@ -96,6 +96,8 @@ export default class DashboardArea extends Vue {
      * Sets access grants web worker.
      */
     public async beforeMount(): Promise<void> {
+        console.log("USER:", this.$store.getters.user)
+        console.log("USER:", {...this.$store.getters.user})
         try {
             await this.$store.dispatch(ACCESS_GRANTS_ACTIONS.STOP_ACCESS_GRANTS_WEB_WORKER);
             await this.$store.dispatch(ACCESS_GRANTS_ACTIONS.SET_ACCESS_GRANTS_WEB_WORKER);
