@@ -16,8 +16,10 @@ var mon = monkit.Package()
 // ClientConfig is a configuration struct for the uplink that controls how
 // to talk to the rest of the network.
 type ClientConfig struct {
-	UserAgent   string        `help:"User-Agent used for connecting to the satellite" default:""`
-	DialTimeout time.Duration `help:"timeout for dials" default:"0h2m00s"`
+	UserAgent    string        `help:"User-Agent used for connecting to the satellite" default:""`
+	DialTimeout  time.Duration `help:"timeout for dials" default:"0h2m00s"`
+	EnableQUIC   bool          `help:"use only QUIC protocol for communication with satellite and storagenodes" default:"false"`
+	EnableHybrid bool          `help:"use QUIC with TCP fallback for communication with satellite and storagenodes" default:"false"`
 }
 
 // Config uplink configuration.
